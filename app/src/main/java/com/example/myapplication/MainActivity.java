@@ -16,85 +16,30 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private static String TAG="MainActivity";
-    static int[][] field= new int[4][4];
-    static int zero=0;
     static Button[] buttons;
-    static long hash=0, M=1000000007,p=1;
     static boolean rotation=false;
     @SuppressLint("SetTextI18n")
     public void winCheck(){
-        p=1;
-        long tmp_hash=0;
-        for(int i=0;i<16;i++){
-            p*=97;
-            p%=M;
-            tmp_hash+=(Integer.parseInt((String) buttons[i].getText()))*p%M;
-            tmp_hash%=M;
-        }
-        Log.d(TAG,"hash: "+ tmp_hash);
-        if(tmp_hash==hash){
+        if(Calculation.winCheck()){
             Log.d(TAG, "again");
             for(int i=0;i<16;i++)
                 buttons[i].setVisibility(View.GONE);
             findViewById(R.id.win).setVisibility(View.VISIBLE);
             findViewById(R.id.again).setVisibility(View.VISIBLE);
         }
-        Log.d(TAG,": "+ hash);
     }
 
     public void changePosition(View view) {
-        int I = 0, J = 0;
         int n = Integer.parseInt(getResources().getResourceEntryName(view.getId()).substring(3));
-        Log.d(TAG, "cliced" + n);
-        if(n==0){
-            I=3;
-            J=3;
-        }
-        else{
-            I=n/4;
-            J=n%4-1;
-            if(J<0){
-                I--;
-                J=3;
-            }
-        }
-
-        Log.d(TAG, I+" "+J);
-        int c=0;
-        boolean t=false;
-        if (I > 0 && field[I - 1][J] == 0) {
-            Log.d(TAG, "case: 0");
-            c=(I-1)*4+J+1;
-            t=true;
-            field[I - 1][J] =  Integer.parseInt((String) buttons[n].getText());
-        } else if (J < 3 && field[I][J + 1] == 0) {
-            c=I*4+J+2;
-            if(c==16)c=0;
-            Log.d(TAG, "case: 1");
-            t=true;
-            field[I][J+1] = Integer.parseInt((String) buttons[n].getText());
-        } else if (I < 3 && field[I + 1][J] == 0) {
-            c=(I+1)*4+J+1;
-            if(c==16)c=0;
-            Log.d(TAG, "case: 2");
-            t=true;
-            field[I + 1][J] =  Integer.parseInt((String) buttons[n].getText());
-    } else if (J > 0 && field[I][J - 1] == 0) {
-            c=I*4+J;
-            Log.d(TAG, "case: 3");
-            t=true;
-            field[I][J-1] =  Integer.parseInt((String) buttons[n].getText());
-        }
-        if(t){
-            field[I][J]=0;
-            zero=n;
+        int a= Integer.parseInt((String) buttons[n].getText());
+        int c=Calculation.changePosition(n,a);
+        if(c!=-1){
             buttons[c].setVisibility(View.VISIBLE);
             buttons[c].setText(buttons[n].getText());
             buttons[n].setText("0");
             buttons[n].setVisibility(View.INVISIBLE);
             winCheck();
         }
-        Log.d(TAG,Arrays.deepToString(field));
     }
 
     @SuppressLint("SetTextI18n")
@@ -131,30 +76,21 @@ public class MainActivity extends AppCompatActivity {
             buttons[0].setText("0");
             findViewById(R.id.win).setVisibility(View.GONE);
             findViewById(R.id.again).setVisibility(View.GONE);
-            p = 97;
-            hash = 0;
-            for (int i = 1; i < 16; i++) {
+            for (int i = 0; i < 16; i++) {
                 buttons[i].setVisibility(View.VISIBLE);
-                p *= 97;
-                p %= M;
-                hash += i * p % M;
-                hash %= M;
             }
             for (int i = 1; i < 16; i++) {
                 buttons[i].setText(tmp.get(i - 1).toString());
             }
-            for (int i = 0; i < 15; i++) {
-                field[i / 4][i % 4] = Integer.parseInt((String) buttons[i+1].getText());
-            }
-            field[3][3]=Integer.parseInt((String) buttons[0].getText());
+            Calculation.start(tmp);
         }
         else{
             for (int i = 0; i < 15; i++) {
-                buttons[i+1].setText(Integer.valueOf(field[i/4][i%4]).toString());
+                buttons[i+1].setText(Integer.valueOf(Calculation.getField()[i/4][i%4]).toString());
             }
-            buttons[0].setText(Integer.valueOf(field[3][3]).toString());
+            buttons[0].setText(Integer.valueOf(Calculation.getField()[3][3]).toString());
         }
-        buttons[zero].setVisibility(View.INVISIBLE);
+        buttons[Calculation.getZero()].setVisibility(View.INVISIBLE);
         rotation=false;
     }
 
@@ -206,5 +142,4 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
         Log.d(TAG, "onStop");
     }
-
 }
